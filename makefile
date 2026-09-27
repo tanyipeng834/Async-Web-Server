@@ -1,6 +1,6 @@
 CC = gcc
 
-CFLAGS = -Wall -Wextra -Wpedantic -std=c11 -g
+CFLAGS = -Wall -Wextra -Wpedantic -std=gnu11 -g
 CPPFLAGS = -Iinclude
 
 TARGET = server
@@ -10,6 +10,8 @@ OBJ = $(SRC:.c=.o)
 
 IMAGE = async-server-dev
 CONTAINER = async-server
+
+PORT = 8080
 
 # ----- C build -----
 
@@ -43,4 +45,4 @@ docker-run:
 		-p 8080:8080 \
 		-v "$(CURDIR):/app" \
 		$(IMAGE) \
-		bash -c "make clean && make && ./$(TARGET)"
+		bash -c "make clean && make && ./$(TARGET) $(PORT)"
