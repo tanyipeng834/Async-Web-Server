@@ -7,6 +7,7 @@
 #include<stdio.h>
 #include<sys/epoll.h>
 #include "network.h"
+#include "io.h"
 // this is the event callback function pointer that is used 
 // when the fd becomes ready
 
@@ -23,6 +24,11 @@ void listen_callback(int epfd,uint32_t events, void * data);
 
 
 int register_listener(int epfd,int listenfd);
+
+int register_connection(int epfd,int connfd);
+
+void * connection_callback(int epfd,uint32_t events,void* data);
+
 
 #endif
 
