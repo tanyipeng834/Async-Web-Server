@@ -18,7 +18,7 @@
 
 
 typedef void(*event_callback)(int epfd,uint32_t events, void * data);
-typedef struct 
+typedef struct _event_handler
 {
     int fd;
     event_callback callback;

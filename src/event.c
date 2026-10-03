@@ -64,7 +64,7 @@ void listen_callback(int epfd,uint32_t events, void *data)
 
         if(register_connection(epfd,connfd)==-1){
         fprintf(stderr,"Not able to register connection to epoll instance");
-        close(connfd);
+        //close(connfd);
         return;
         }
         // accept another connection
@@ -160,14 +160,10 @@ void connection_callback(int epfd,uint32_t events,void* data)
     int result = handle_read(con);
 
    
-
-    if (result == -1) {
+        // if it return 0 means that the 
+    if (result == -1 || result ==0) {
         // actual error
-        epoll_ctl(epfd, EPOLL_CTL_DEL, con->fd, NULL);
-        close(con->fd);
-
-        free(con);
-        free(data);
+       //close_connection(con,data,epfd);
 
         return;
     }
@@ -178,8 +174,8 @@ void connection_callback(int epfd,uint32_t events,void* data)
         // been fully parsed
         result = parse_http(con);
         
-        // result is -1 or result ==0 means request not enough data yet
-        if(result ==-1){
+        // result is -1 or result ==1 means request not enough data yet
+        if(result ==-1 || result ==1){
             return;
         }
     
@@ -190,6 +186,7 @@ void connection_callback(int epfd,uint32_t events,void* data)
     memset(con->write_buf,0,sizeof(con->write_buf));
 
     http_response  * response = build_http_response(con->request->uri);
+    con->response = response;
      if(response->http_status ==200){
                     status_string = "Ok";
                 }
@@ -205,19 +202,25 @@ void connection_callback(int epfd,uint32_t events,void* data)
     "Content-Length: %jd\r\n"
     "Content-Type: %s\r\n"
     "\r\n",
-    response->http_status,
+    con->response->http_status,
     status_string,
-    (off_t)response->content_length,
-    response->content_type
+    (off_t)con->response->content_length,
+    con->response->content_type
 );
 
-memcpy(con->write_buf + size_written,response->body,response->content_length);
+
+con->write_len = size_written;
+
+
+
+
 
     
     
          result = handle_write(con);
         // 
         if(result ==-1){
+            //close_connection(con,data,epfd);
             return;
 
         }
@@ -269,22 +272,13 @@ memcpy(con->write_buf + size_written,response->body,response->content_length);
     int result = handle_write(con);
 
     if (result == -1) {
-        // actual write error
-        epoll_ctl(epfd, EPOLL_CTL_DEL, con->fd, NULL);
-        close(con->fd);
-
-        free(con);
-        free(data);
+       //close_connection(con,data,epfd);
 
         return;
     }
 
     if (result == 0) {
-        /*
-         * Finished writing.
-         *
-         * We don't need EPOLLOUT anymore.
-         */
+        
         struct epoll_event event = {0};
 
         event.events = EPOLLIN;
@@ -302,13 +296,7 @@ memcpy(con->write_buf + size_written,response->body,response->content_length);
         return;
     }
 
-    /*
-     * result == 1:
-     * write() hit EAGAIN again.
-     *
-     * EPOLLOUT is already enabled.
-     * Just return to epoll_wait().
-     */
+    
     return;
 }
 

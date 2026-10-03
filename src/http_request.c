@@ -15,6 +15,10 @@ int parse_http(connection *con)
 
         char *line_end =
             find_crlf(start, remaining);
+        // not complete request
+        if(line_end==NULL){
+            return 1;
+        }
 
        
         
@@ -63,7 +67,7 @@ int parse_http(connection *con)
         }
     }
 
-    return 0;
+    return 1;
 }
 
 

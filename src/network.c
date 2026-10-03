@@ -100,5 +100,23 @@ int flags = fcntl(connfd,F_GETFL,0);
     return connfd;
 }
 
+void close_connection(connection *con,
+                      event_handler *ev,
+                      int epfd)
+{
+    if (con == NULL)
+        return;
+
+    if (epoll_ctl(epfd, EPOLL_CTL_DEL, con->fd, NULL) == -1)
+        perror("epoll_ctl delete");
+
+    close(con->fd);
+
+    free_http_request(con->request);
+    free_http_response(con->response);
+
+    free(con);
+    free(ev);
+}
 
 

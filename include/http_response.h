@@ -20,6 +20,7 @@ typedef struct _HTTP_RESPONSE
 
 http_response * create_http_response();
 http_response* build_http_response(char *uri);
+void free_http_response(http_response * response);
 
 
 #endif
