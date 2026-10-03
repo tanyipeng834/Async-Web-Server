@@ -48,12 +48,12 @@ int handle_read(connection* con){
 int handle_write(connection * con){
     while(1){
         // all bytes have been written
-        if(con->write_offset ==sizeof(con->write_buf)){
+        if(con->write_offset ==strlen(con->write_buf)){
             return 0;
         }
        
         // write 
-        ssize_t n = write(con->fd,con->write_buf+ con->write_offset,sizeof(con->write_buf)-con->write_offset);
+        ssize_t n = write(con->fd,con->write_buf+ con->write_offset,strlen(con->write_buf)-con->write_offset);
 
         if(n>0){
             con->write_offset +=n;

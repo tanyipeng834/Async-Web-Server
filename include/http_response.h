@@ -2,6 +2,7 @@
 #define HTTP_RESPONSE_H
 #include <sys/types.h>
 #include <stdlib.h>
+#include "file_utils.h"
 typedef enum{
     HTTP_OK = 200,
     HTTP_NOT_FOUND = 404
@@ -18,6 +19,7 @@ typedef struct _HTTP_RESPONSE
 
 
 http_response * create_http_response();
+http_response* build_http_response(char *uri);
 
 
 #endif

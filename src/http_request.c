@@ -17,9 +17,7 @@ int parse_http(connection *con)
             find_crlf(start, remaining);
 
        
-        if (line_end == NULL) {
-            return 0;
-        }
+        
 
         size_t line_len = line_end - start;
 
@@ -55,7 +53,7 @@ int parse_http(connection *con)
 
                 con->http_state = PARSE_DONE;
 
-                return 1;
+                return 0;
             }
 
            
