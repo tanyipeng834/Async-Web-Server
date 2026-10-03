@@ -12,10 +12,22 @@
 #include<netdb.h>
 #include<fcntl.h>
 #include "errno.h"
+#include "http_request.h"
+#include "http_response.h"
 
 
+typedef struct _http_request http_request;
 
-typedef struct
+
+typedef enum{
+
+    PARSE_REQUEST_LINE,
+    PARSE_HEADERS,
+    PARSE_DONE
+}parse_state;
+
+
+typedef struct _connection
 {
     // this is the connfd which we retun back to the event loop 
     int fd;
@@ -25,12 +37,14 @@ typedef struct
     size_t read_len;
     // how many
     size_t read_offset;
+    http_request * request;
+    http_response * response;
     // user land buffer for writing to the conn fd
     char write_buf[8192];
     // how much of the bytes has been handed over to the kernel write()
     size_t write_offset;
-    // bytes lefft to write to the socket
-    size_t write_cnt;
+    
+    parse_state http_state;
 }connection;
 
 

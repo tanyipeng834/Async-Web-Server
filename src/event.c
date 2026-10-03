@@ -1,8 +1,5 @@
+
 #include "event.h"
-#include "network.h"
-
-
-
 
 int register_listener(int epfd, int listenfd)
 {
@@ -113,6 +110,7 @@ int register_connection(int epfd, int connfd)
     }
     connection * con = calloc(1,sizeof(connection));
     con->fd = connfd;
+    con->http_state=PARSE_REQUEST_LINE;
     
 
     handler->fd = connfd;
@@ -150,7 +148,7 @@ int register_connection(int epfd, int connfd)
 }
 
 // this is for the connection callback 
-void * connection_callback(int epfd,uint32_t events,void* data)
+void connection_callback(int epfd,uint32_t events,void* data)
 {
 
     connection* con = ((event_handler*)data)->data;
@@ -182,10 +180,75 @@ void * connection_callback(int epfd,uint32_t events,void* data)
     }
 
     // result == 1 means we drained until EAGAIN
+    while(1){
+        // we will keep parsing until line is not fully processed or we will parse until the request has
+        // been fully parsed
+        int result = parse_http(con);
+         if (result == 1) {
+    printf("HTTP request parsed!\n");
+
+    printf("Method:  %s\n", con->request->method);
+    printf("URI:     %s\n", con->request->uri);
+    printf("Version: %s\n", con->request->version);
+}
+       
+        if(result==0 || result ==-1 ){
+            break;
+        }
+    }
+
+    const char *response =
+    "HTTP/1.1 200 OK\r\n"
+    "Content-Type: text/plain\r\n"
+    "Content-Length: 5\r\n"
+    "\r\n"
+    "Hello";
+    // copy the response to the write buffer
+    memcpy(con->write_buf,response,strlen(response));
+    // write the result until this two condition happens
+    // one when the condition has been successful
+    while(1){
+        int result = handle_write(con);
+        // 
+        if(result ==0 || result ==-1){
+            break;
+
+        }
+
+        if(result ==1){
+            // create an event with 
+            struct epoll_event event = {0};
+            event.events = events| EPOLLOUT;
+           // the callback would be the same to connection callback
+            
+            event.data.ptr = data;
+
+
+
+            if (epoll_ctl(epfd,EPOLL_CTL_MOD,con->fd,&event) == -1)
+    {
+        perror("epoll_ctl MOD");
+       return;
+    }
+
+  
+}
+
+
+
+
+
+            
+        }
+
+    }
+
+
+
+    // write the result
+
     
 
-        printf("%s",con->read_buf);
-    }
 
     else if(events&(EPOLLERR |EPOLLHUP)){
         fprintf(stderr,"error on listening socket");
@@ -196,3 +259,4 @@ void * connection_callback(int epfd,uint32_t events,void* data)
 
 
 }
+
